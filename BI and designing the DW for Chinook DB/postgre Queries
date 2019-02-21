@@ -1,0 +1,73 @@
+select * from "InvoiceLine";
+select * from "Customer";
+-- question 1
+Select SUM("InvoiceLine"."UnitPrice" * "InvoiceLine"."Quantity") as TotalSales from "InvoiceLine";
+
+-- question 2
+select "Customer"."Country", sum("InvoiceLine"."UnitPrice" * "InvoiceLine"."Quantity") as 
+TotalSales from "Customer"
+inner join "Invoice" on "Invoice"."CustomerId"= "Customer"."CustomerId"
+inner join "InvoiceLine" on "InvoiceLine"."InvoiceId"= "Invoice"."InvoiceId"
+group by "Customer"."Country"
+order by TotalSales desc;
+
+-- question 3
+select "Customer"."Country",COALESCE("Customer"."State","Customer"."City") as State,"Customer"."City",
+sum("InvoiceLine"."UnitPrice"*"InvoiceLine"."Quantity") as TotalSales
+from "Customer" inner join "Invoice" on "Invoice"."CustomerId"= "Customer"."CustomerId"
+inner join "InvoiceLine" on "InvoiceLine"."InvoiceId" = "Invoice"."InvoiceId"
+group by Rollup ("Customer"."Country","Customer"."City",
+"Customer"."State")
+order by "Customer"."Country" ;
+
+-- question 4
+select CONCAT("Customer"."LastName", ' ', "Customer"."FirstName") as CustomerName, 
+sum("InvoiceLine"."UnitPrice"*"InvoiceLine"."Quantity") as TotalSales from "Customer"
+inner join "Invoice" on "Invoice"."CustomerId" = "Customer"."CustomerId"
+inner join "InvoiceLine" on "InvoiceLine"."InvoiceId" = "Invoice"."InvoiceId"
+group by CustomerName
+order by TotalSales desc;
+
+-- question 5
+select "Artist"."Name", sum("InvoiceLine"."UnitPrice"*"InvoiceLine"."Quantity") as TotalSales 
+from "InvoiceLine"
+inner join "Track" on "Track"."TrackId" = "InvoiceLine"."TrackId"
+inner join "Album" on "Album"."AlbumId" ="Track"."AlbumId"
+inner join "Artist" on "Album"."ArtistId" = "Artist"."ArtistId"
+group by "Artist"."Name"
+order by TotalSales desc;
+
+-- question 6
+select "Artist"."Name", "Album"."Title",sum("InvoiceLine"."UnitPrice"*"InvoiceLine"."Quantity") as TotalSales 
+from "InvoiceLine"
+inner join "Track" on "Track"."TrackId" = "InvoiceLine"."TrackId"
+inner join "Album" on "Album"."AlbumId" = "Track"."AlbumId"
+inner join "Artist" on "Album"."ArtistId" ="Artist"."ArtistId"
+group by "Artist"."Name","Album"."Title"
+order by TotalSales desc;
+
+
+-- question 7
+select 
+CONCAT("Employee"."LastName", ' ', "Employee"."FirstName") as EmployeeName, 
+sum("InvoiceLine"."UnitPrice"*"InvoiceLine"."Quantity") as TotalSales,
+count("InvoiceLine"."Quantity") as Quantity,
+case
+when DATE_PART('year', Current_Date::date) - DATE_PART('year', "Employee"."BirthDate"::date) > 39 AND DATE_PART('year', Current_Date::date) - DATE_PART('year', "Employee"."BirthDate"::date) < 50 Then '47-49'
+when DATE_PART('year', Current_Date::date) - DATE_PART('year', "Employee"."BirthDate"::date) > 50 then '50+'
+end as AgeGroup from "Employee" 
+inner join "Customer" on "Customer"."SupportRepId" = "Employee"."EmployeeId"
+inner join "Invoice" on "Invoice"."CustomerId" = "Customer"."CustomerId"
+inner join "InvoiceLine" on "InvoiceLine"."InvoiceId" = "Invoice"."InvoiceId"
+where "Employee"."Title"='Sales Support Agent'
+group by EmployeeName,"Employee"."BirthDate"
+order by TotalSales desc;
+
+-- question 8
+select "MediaType"."Name", sum("InvoiceLine"."Quantity") as Quantity,
+sum("InvoiceLine"."UnitPrice"*"InvoiceLine"."Quantity") as TotalSales
+from "InvoiceLine" inner join "Track" on "Track"."TrackId" = "InvoiceLine"."TrackId"
+inner join "MediaType" on "MediaType"."MediaTypeId"= "Track"."MediaTypeId"
+group by "MediaType"."Name"
+order by "MediaType"."Name" desc;
+
